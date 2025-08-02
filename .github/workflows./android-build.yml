@@ -1,0 +1,49 @@
+# Nome do nosso processo, para aparecer no GitHub
+name: Construir o App FyrstKing
+
+# Gatilho: Diz ao robô QUANDO começar a trabalhar.
+on:
+  push: # "Push" significa "sempre que eu enviar código novo daquele túnel do Spck".
+    branches: [ "main" ] # Especificamente, quando eu enviar para a pasta principal "main".
+
+# Tarefas: A lista de coisas que o robô precisa fazer.
+jobs:
+  build: # Damos um nome para o conjunto de tarefas: "build" (construir).
+    
+    # Máquina do Robô: Dizemos que tipo de computador o robô deve usar.
+    runs-on: ubuntu-latest
+
+    # Passos: O manual de instruções, um passo de cada vez.
+    steps:
+      # Passo 1: O robô baixa a versão mais recente da planta (seu código).
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v3
+
+      # Passo 2: O robô instala as ferramentas de construção (Java Development Kit).
+      - name: Preparar o ambiente Java (JDK 17)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Passo 3: O robô vai até o cofre, pega os ingredientes secretos e os coloca na receita.
+      - name: Injetar as Chaves de API Secretas
+        run: |
+          sed -i "s/SUA_CHAVE_GROQ_AQUI/${{ secrets.GROQ_API_KEY }}/g" app/src/main/java/com/seu_dominio/fyrstking/MainActivity.java
+          sed -i "s/SUA_CHAVE_CLIPDROP_AQUI/${{ secrets.CLIPDROP_API_KEY }}/g" app/src/main/java/com/seu_dominio/fyrstking/MainActivity.java
+      # ATENÇÃO: Altere "com/seu_dominio/fyrstking/" para o caminho real do seu pacote no arquivo java!
+
+      # Passo 4: O robô pega a ferramenta principal de construção (o Gradle) e dá permissão para ela rodar.
+      - name: Dar permissão de execução ao Gradle
+        run: chmod +x gradlew
+
+      # Passo 5: O robô dá o comando final para construir o aplicativo.
+      - name: Construir o APK com o Gradle
+        run: ./gradlew assembleDebug
+
+      # Passo 6: O robô pega o produto finalizado e o coloca em uma prateleira para você baixar.
+      - name: Fazer upload do APK (artefato)
+        uses: actions/upload-artifact@v3
+        with:
+          name: FyrstKing-App-Pronto
+          path: app/build/outputs/apk/debug/app-debug.apk
